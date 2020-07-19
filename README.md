@@ -15,8 +15,8 @@ foxbat.execute(file)
 ``````
 ## Examples
 ```
-{% do something once %}
-{@ do something every time the page is served @}
+{% do something once for any specific locale %}
+{@ do something every time the page is served, using the locale specific intermediate file @}
 {{ preserve this markup for use in the client }}
 
 ``````
