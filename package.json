@@ -1,0 +1,31 @@
+{
+  "name": "foxbat",
+  "version": "0.0.0",
+  "description": "Multi phase executable Handlebars with integrated i18n",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "Mark Lester",
+  "license": "ISC",
+  "dependencies": {
+    "handlebars": "^4.7.6",
+    "lru-cache": "^6.0.0",
+    "mkdirp": "^1.0.4"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mark-lester/foxbat.git"
+  },
+  "keywords": [
+    "handlebars",
+    "pangolin"
+  ],
+  "bugs": {
+    "url": "https://github.com/mark-lester/foxbat/issues"
+  },
+  "homepage": "https://github.com/mark-lester/foxbat#readme"
+}
