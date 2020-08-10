@@ -1,23 +1,26 @@
 # Foxbat
-Multi phase executable Handlebars with integrated i18n
+Multi phase executable LiquidJS with integrated i18n
 
 ## Usage
 ```
 Foxbat=require('foxbat')
-foxbat=new Foxbat({
-  handbars:handlebars,
-  once_file_limit:100,
-  every_file_limit:500,
-  })
+foxbat=new Foxbat(locale)
 foxbat.execute(file)
 .then((output)=>
 
 ``````
 ## Examples
 ```
-{% do something once for any specific locale %}
-{@ do something every time the page is served, using the locale specific intermediate file @}
-{{ preserve this markup for use in the client }}
+// just once per locale
+{@translate "translate something" @}
+{$ constant_variable_per_domain $}
+
+// perform on every CGI call for this file
+{! for product in collection.products !}
+  {? product.title ?}
+{! endfor !}
+
+// standard {{ and {% syntax is reserved for use in the client
 
 ``````
 ## Features
