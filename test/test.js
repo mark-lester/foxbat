@@ -1,5 +1,6 @@
 const Foxbat=require('../index')
 const foxbat = new Foxbat()
+foxbat.loadHelpers()
 const fs=require('fs').promises;
 const assert = require('assert')
 

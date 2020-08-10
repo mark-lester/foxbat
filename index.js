@@ -3,6 +3,8 @@ const LRU=require('lru-cache')
 const mkdirp = require('mkdirp')
 const path = require('path')
 
+const loadHelpers = require('./loadHelpers')
+
 const FOXBAT_DIRECTORY='.foxbat'
 const ONCE_EXTENSION='.%'
 const EVERY_EXTENSION='.@'
@@ -17,6 +19,10 @@ module.exports= class Foxbat {
 		this.once_files=new LRU(options.once_limit || ONCE_FILE_LIMIT)
 		this.every_files=new LRU(options.every_limit || EVERY_FILE_LIMIT)
 		return this
+	}
+
+	loadHelpers(directory){
+		return loadHelpers(this.hbs,directory)
 	}
 
 	execute(full,locale,context){
@@ -36,7 +42,7 @@ module.exports= class Foxbat {
 		return dir+'/.'+name+ONCE_EXTENSION
 	}
 
-	once_exec_file(full,locale){
+	once_execed_file(full,locale){
 		var dir=path.dirname(full)
 		var name=path.basename(full)
 		return [dir,FOXBAT_DIRECTORY,locale,name].join('/')
@@ -69,6 +75,7 @@ module.exports= class Foxbat {
 		return fs.readFile(full)
 		.then(function(source){
 			source=transform(source,['{','}'],['_','_'])
+			source=transform(source,['""','""'],['%__ "','" %'])
 			source=transform(source,['%','%'],['{','}'])
 			output=this.hbs.precompile(source,{commonjs:true})
 			return fs.writeFile(this.once_compiled_file(full), output)
@@ -92,7 +99,7 @@ module.exports= class Foxbat {
 	}
 
 	once_exec(full,locale,context){
-		var execed=this.once_exec_file(full,locale)
+		var execed=this.once_execed_file(full,locale)
 		var compiled=this.once_compiled_file(full,locale)
 		return isNewer(compiled,execed)
 		.then(function (make){
@@ -112,7 +119,7 @@ module.exports= class Foxbat {
 
 	every_compile(full,locale){
 		var compiled=this.every_compiled_file(full,locale)
-		var pre_exec=this.once_exec_file(full,locale)
+		var pre_exec=this.once_execed_file(full,locale)
 		return isNewer(pre_exec,compiled)
 		.then(function (make){
 			if (make)
@@ -124,7 +131,7 @@ module.exports= class Foxbat {
 	every_compile_inner(full,locale){
 		var output
 		this.every_files.del(every_key(full,locale))
-		return fs.readFile(this.once_exec_file(full,locale))
+		return fs.readFile(this.once_execed_file(full,locale))
 		.then(function (source){
 			source=transform(source,['@','@'],['{','}'])
 			output=this.hbs.precompile(source,{commonjs:true})

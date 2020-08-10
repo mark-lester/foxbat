@@ -1,6 +1,6 @@
 {
   "name": "foxbat",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Multi phase executable Handlebars with integrated i18n",
   "main": "index.js",
   "scripts": {
@@ -9,6 +9,7 @@
   "author": "Mark Lester",
   "license": "ISC",
   "dependencies": {
+    "async-helpers": "^0.3.17",
     "handlebars": "^4.7.6",
     "lru-cache": "^6.0.0",
     "mkdirp": "^1.0.4"
