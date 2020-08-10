@@ -1,174 +1,68 @@
-const fs=require('fs').promises
-const LRU=require('lru-cache')
 const mkdirp = require('mkdirp')
 const path = require('path')
-
-const loadHelpers = require('./loadHelpers')
-
+const FS = require('fs').promises
+const Translate=require('./translate')
 const FOXBAT_DIRECTORY='.foxbat'
-const ONCE_EXTENSION='.%'
-const EVERY_EXTENSION='.@'
-const DEFAULT_LOCALE='DEFAULT'
-const ONCE_FILE_LIMIT=200
-const EVERY_FILE_LIMIT=500
 
-module.exports= class Foxbat {
+module.exports=function(Liquid){
+
+if (!Liquid)
+	Liquid=Translate(require('liquidjs').Liquid)
+
+return class Foxbat extends Liquid {
 	constructor(options){
 		options=options||{}
-		this.hbs=options.hbs || require('handlebars')
-		this.once_files=new LRU(options.once_limit || ONCE_FILE_LIMIT)
-		this.every_files=new LRU(options.every_limit || EVERY_FILE_LIMIT)
-		return this
+		super(Object.assign(options,{
+			tagDelimiterLeft:options.everyTagDelimiterLeft || '{@',
+			tagDelimiterRight:options.everyTagDelimiterRight ||  '@}',
+			outputDelimiterLeft:options.everyOutputDelimiterLeft ||  '{$',
+			outputDelimiterRight:options.everyOutputDelimiterRight ||  '$}',
+		}))
+
+		this.preliquid=new Liquid(Object.assign(options,{
+			tagDelimiterLeft:options.onceTagDelimiterLeft || '{!',
+			tagDelimiterRight:options.onceTagDelimiterRight ||  '!}',
+			outputDelimiterLeft:options.onceOutputDelimiterLeft ||  '{?',
+			outputDelimiterRight:options.onceOutputDelimiterRight ||  '?}',
+		}))
 	}
 
-	loadHelpers(directory){
-		return loadHelpers(this.hbs,directory)
-	}
+    	async renderFile(file, ctx, opts){
+        	const options = Object.assign({}, this.options, normalize(opts));
+        	const paths = options.root.map(root => this.fs.resolve(root, file, options.extname));
 
-	execute(full,locale,context){
-		locale=locale || DEFAULT_LOCALE
-		var dir=path.dirname(full)
-		return mkdirp([dir,FOXBAT_DIRECTORY,locale].join('/'))
-		.then(function(){
-			return this.once(full,locale,context)
-		}.bind(this)).then(function (){
-			return this.every(full,locale,context)
-		}.bind(this))
-	}
-
-	once_compiled_file(full){
-		var dir=path.dirname(full)
-		var name=path.basename(full)
-		return dir+'/.'+name+ONCE_EXTENSION
-	}
-
-	once_execed_file(full,locale){
-		var dir=path.dirname(full)
-		var name=path.basename(full)
-		return [dir,FOXBAT_DIRECTORY,locale,name].join('/')
-	}
-
-	every_compiled_file(full,locale){
-		var dir=path.dirname(full)
-		var name=path.basename(full)
-		return [dir,FOXBAT_DIRECTORY,locale,'.'+name+EVERY_EXTENSION].join('/')
-	}
-
-	once(full,locale,context){
-		return this.once_compile(full)
-		.then(function (){
-			return this.once_load(full)
-		}.bind(this)).then(function(){
-			return this.once_exec(full,locale,context)
-		}.bind(this))
-	}
-
-	once_compile(full){
-		var compiled=this.once_compiled_file(full)
-		if (isNewer(full,compiled))
-			return this.once_compile_inner(full)
-	}
-
-	once_compile_inner(full){
-		var output
-		this.once_files.del(full)
-		return fs.readFile(full)
-		.then(function(source){
-			source=transform(source,['{','}'],['_','_'])
-			source=transform(source,['""','""'],['%__ "','" %'])
-			source=transform(source,['%','%'],['{','}'])
-			output=this.hbs.precompile(source,{commonjs:true})
-			return fs.writeFile(this.once_compiled_file(full), output)
-		}.bind(this))
-		.then(function (){
-			return this.once_store(full,output)
-		}.bind(this))
-	}
-
-	once_load(full){
-		if (this.once_files.get(full))
-			return
-		return fs.readFile(this.once_compiled_file())
-		.then(function(output){
-			return this.once_store(full,output)
-		}.bind(this))
-	}
-
-	once_store(full,output){
-		return this.once_files.set(full,this.hbs.template(new Function('return ' + output)()))
-	}
-
-	once_exec(full,locale,context){
-		var execed=this.once_execed_file(full,locale)
-		var compiled=this.once_compiled_file(full,locale)
-		return isNewer(compiled,execed)
-		.then(function (make){
-			if (make)
-				return fs.writeFile(execed,this.once_files.get(full)(context))
-		}.bind(this))
-	}
-
-	every(full,locale,context){
-		return this.every_compile(full,locale)
-		.then(function (){
-			return this.every_load(full,locale)
-		}.bind(this)).then(function (){
-			return this.every_exec(full,locale,context)
-		}.bind(this))
-	}
-
-	every_compile(full,locale){
-		var compiled=this.every_compiled_file(full,locale)
-		var pre_exec=this.once_execed_file(full,locale)
-		return isNewer(pre_exec,compiled)
-		.then(function (make){
-			if (make)
-				return this.every_compile_inner(full,locale)
-			return
-		}.bind(this))
-	}
-
-	every_compile_inner(full,locale){
-		var output
-		this.every_files.del(every_key(full,locale))
-		return fs.readFile(this.once_execed_file(full,locale))
-		.then(function (source){
-			source=transform(source,['@','@'],['{','}'])
-			output=this.hbs.precompile(source,{commonjs:true})
-			return fs.writeFile(this.every_compiled_file(full,locale),output)
-		}.bind(this))
-		.then(function(){
-			return this.every_store(full,locale,output)
-		}.bind(this))
-	}
-
-	every_store(full,locale,output){
-		return this.every_files.set(every_key(full,locale),this.hbs.template(new Function('return ' + output)()))
-	}
-
-	every_load(full,locale){
-		if (this.every_files.get(every_key(full,locale)))
-			return
-		return fs.readFile(this.every_complied_file(full,locale))
-		.then(function(output){
-			return this.every_store(full,locale,output)
-		}.bind(this))
-	}
-
-	every_exec(full,locale,context){
-		return transform(
-			this.every_files.get(every_key(full,locale))(context),
-			['_','_'],['{','}']
-		)
-	}
+        	for (const filepath of paths) {
+			var sub_ctx=Object.assign({},ctx)
+            		if (!this.fs.existsSync(filepath))
+                		continue;
+			const inter=interFile(filepath,sub_ctx._.LOCALE)
+			if (!sub_ctx._)
+				sub_ctx._={}
+			sub_ctx._.FILEPATH=filepath
+			console.log("CTX="+JSON.stringify(sub_ctx))
+			var content
+			if (isNewer(filepath,inter)){
+				content = await this.preliquid.renderFile(filepath,sub_ctx,opts)
+				await FS.writeFile(inter,content)
+			}
+			else {
+				content = await FS.readFile(inter)
+			}
+			const tmpl= this.parse(content)
+			return this.render(tmpl,sub_ctx,opts)
+		}
+	} 
 }
+
+}// end export
+
 
 function isNewer(source,target){
 	var sstat
-	return fs.stat(source)
+	return FS.stat(source)
 	.then((s)=>{
 		sstat=s
-		return fs.stat(target)
+		return FS.stat(target)
 	}).then((f)=>{
 		fstat=f
 		if (!fstat || !fstat.mtime)
@@ -180,12 +74,42 @@ function isNewer(source,target){
 	})
 }
 
-function transform(s,from,to){
-	var [from_start,from_end]=from
-	var [to_start,to_end]=to
-	s=""+s
-	return s.replace(new RegExp('{'+from_start,"g"),'{'+to_start)
-		.replace(new RegExp(from_end+'}',"g"),to_end+'}')
+function interFile(file,locale){
+	return [path.dirname(file),FOXBAT_DIRECTORY,locale,path.basename(file)].join('/')
 }
 
-function every_key(full,locale){ return full+'$'+locale }
+const defaultOptions = {
+    root: ['.'],
+    cache: undefined,
+    extname: '',
+    dynamicPartials: true,
+    trimTagRight: false,
+    trimTagLeft: false,
+    trimOutputRight: false,
+    trimOutputLeft: false,
+    greedy: true,
+    tagDelimiterLeft: '{%',
+    tagDelimiterRight: '%}',
+    outputDelimiterLeft: '{{',
+    outputDelimiterRight: '}}',
+    strictFilters: false,
+    strictVariables: false,
+    globals: {}
+};
+function normalize(options) {
+    options = options || {};
+    if (options.hasOwnProperty('root')) {
+        options.root = normalizeStringArray(options.root);
+    }
+    return options;
+}
+function applyDefault(options) {
+    return Object.assign({}, defaultOptions, options);
+}
+function normalizeStringArray(value) {
+    if (isArray(value))
+        return value;
+    if (isString(value))
+        return [value];
+    return [];
+}

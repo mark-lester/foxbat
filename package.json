@@ -11,8 +11,12 @@
   "dependencies": {
     "async-helpers": "^0.3.17",
     "handlebars": "^4.7.6",
+    "liquidjs": "^9.15.0",
     "lru-cache": "^6.0.0",
-    "mkdirp": "^1.0.4"
+    "mkdirp": "^1.0.4",
+    "mysql2": "^2.1.0",
+    "sequelize": "^6.3.4",
+    "sequelize-modelreader": "^1.0.1"
   },
   "directories": {
     "test": "test"
