@@ -28,7 +28,7 @@ return class Foxbat extends Liquid {
 	}
 
     	async renderFile(file, ctx, opts){
-        	const options = Object.assign({}, this.options, normalize(opts));
+        	const options = Object.assign({}, this.options,opts)
         	const paths = options.root.map(root => this.fs.resolve(root, file, options.extname));
 
         	for (const filepath of paths) {
@@ -76,40 +76,4 @@ function isNewer(source,target){
 
 function interFile(file,locale){
 	return [path.dirname(file),FOXBAT_DIRECTORY,locale,path.basename(file)].join('/')
-}
-
-const defaultOptions = {
-    root: ['.'],
-    cache: undefined,
-    extname: '',
-    dynamicPartials: true,
-    trimTagRight: false,
-    trimTagLeft: false,
-    trimOutputRight: false,
-    trimOutputLeft: false,
-    greedy: true,
-    tagDelimiterLeft: '{%',
-    tagDelimiterRight: '%}',
-    outputDelimiterLeft: '{{',
-    outputDelimiterRight: '}}',
-    strictFilters: false,
-    strictVariables: false,
-    globals: {}
-};
-function normalize(options) {
-    options = options || {};
-    if (options.hasOwnProperty('root')) {
-        options.root = normalizeStringArray(options.root);
-    }
-    return options;
-}
-function applyDefault(options) {
-    return Object.assign({}, defaultOptions, options);
-}
-function normalizeStringArray(value) {
-    if (isArray(value))
-        return value;
-    if (isString(value))
-        return [value];
-    return [];
 }
