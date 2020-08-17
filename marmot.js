@@ -132,14 +132,23 @@ module.exports=class Marmot{
 		const namespace=await this.registerNamespace(name)
 		const phrase=await this.registerPhrase(phrase_phrase,namespace.locale,options)
 		await this.registerInstance(namespace.id,phrase.id)
-		return  await this.getTranslations(phrase.id,namespace.id)
+		const translations=  await this.getTranslations(phrase.id,namespace.id)
+		return [phrase.id,namespace.id,translations]
 	}
 
 	async Get(phrase,options){
-		const translations= await this.getAll(phrase,options)
-		if (!translations || !translations.length)
-			return undefined
-		return translations[0].translation
+		var [PhraseId,NamespaceId,translations]= await this.getAll(phrase,options)
+		if (!translations || !translations.length){
+			console.log("NO RESULTS")
+			translations=[ { 
+				PhraseId:PhraseId,
+				NamespaceId,NamespaceId,
+				translation:phrase
+			}]
+		}
+		var translation=translations[0]
+		translation.translation=""+translation.translation
+		return translation
 	}
 
 	async putTranslation(NamespaceId,PhraseId,translation){
@@ -159,19 +168,10 @@ module.exports=class Marmot{
 		return Translation
 	}
 
-	async Put(phrase_phrase,translation,options){
-		var NamespaceId,PhraseId
+	async Put(phrase,translation,options){
+		const existing=await this.Get(phrase,options)
+		console.log("TRANSLATIONS="+JSON.stringify(existing))
 
-		const phrase= await this.registerPhrase(phrase_phrase,options)
-		const translations=await this.getAll(phrase_phrase,options)
-
-		if (!translations || !translations.length){
-			NamespaceId = this.DefaultNamespaceId
-		} else {
-			const namespace= await this.registerNamespace(this.namespace(context))
-			if (translations.length == 1 || translations[1].NamespaceId != namespace.id)
-				NamespaceId=namespace.id
-		}
-		return NamespaceId ? this.putTranslation(NamespaceId,phrase.id,translation) :undefined
+		return this.putTranslation(existing.NamespaceId,existing.PhraseId,translation)
 	}
 }

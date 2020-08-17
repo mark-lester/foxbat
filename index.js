@@ -39,7 +39,6 @@ return class Foxbat extends Liquid {
 			if (!sub_ctx._)
 				sub_ctx._={}
 			sub_ctx._.FILEPATH=filepath
-			console.log("CTX="+JSON.stringify(sub_ctx))
 			var content
 			if (isNewer(filepath,inter)){
 				content = await this.preliquid.renderFile(filepath,sub_ctx,opts)
