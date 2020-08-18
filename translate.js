@@ -25,9 +25,7 @@ const transform={
 	render: async function (context, emitter) {
 		var rank=determine_rank(context,this.control_variable)
 		translation = this.phrases[rank]
-		console.log("TRANSCONTEXT="+JSON.stringify(context))
 		const output = await this.liquid.parseAndRender(translation, context.environments)
-		console.log("TRANSEXEC="+translation+"->"+output)
 		return emitter.write(output)
 	}
 }
@@ -47,7 +45,7 @@ const translate={
 		Object.keys(this.phrases).forEach((rank)=>{
 			job=job.then(()=>{
 				return me.liquid.marmot.Get(this.phrases[rank],{
-					context:context.environments._.FILEPATH,
+					filepath:context.environments._.FILEPATH,
 					rank:rank
 				}) 
 				.then((r)=>{
@@ -73,6 +71,7 @@ const translate={
 				var translation=translations[nrank].translation
 //				const output = await this.liquid.evalValue(translation, context)
 //		console.log("OUTPUT="+output)
+//				emitter.write(output)
 				emitter.write(translation)
 				break
 			case 'every':
@@ -91,7 +90,6 @@ function isHtml(context){
 }
 
 function transformCode(translations,control_variable,execution_phase){
-
 	var args=Object.keys(translations).map(function (rank){
 		return rank+'="'+translations[rank].translation+'"'
 	})
@@ -102,7 +100,9 @@ function transformCode(translations,control_variable,execution_phase){
 	exec_phase_open_char= execution_phase == 'every' ? '@' : '%' 
 	exec_phase_close_char= execution_phase == 'every' ? '@' : '%'
 
-	return '{'+exec_phase_open_char+'transform '+args+' '+exec_phase_close_char+'}'
+	const output= '{'+exec_phase_open_char+'transform '+args+' '+exec_phase_close_char+'}'
+	console.log("OUTPUT="+output)
+	return output
 }
 
 

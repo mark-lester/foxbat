@@ -84,7 +84,7 @@ module.exports=class Marmot{
 		})
 		return Phrase
 	}
-	async registerInstance(NamespaceId,PhraseId){
+	async registerInstance(PhraseId,NamespaceId){
 		const [Instance]= await this.sequelize.models.Instance.findOrCreate({
 			where:{
 				NamespaceId:NamespaceId,
@@ -99,13 +99,14 @@ module.exports=class Marmot{
 	}
 
 	async getTranslations(PhraseId,NamespaceId){
-		const translations = await this.sequelize.models.Translation.findAll({
+		var translations = await this.sequelize.models.Translation.findAll({
 			where:{
 				PhraseId:PhraseId,
 				locale:this.options.locale
 			}
 		})
-		return this.orderTranslations(translations,NamespaceId)
+		translations= this.orderTranslations(translations,NamespaceId)
+		return translations
 	}
 
 	orderTranslations(translations,NamespaceId){
@@ -119,40 +120,59 @@ module.exports=class Marmot{
 				t.order=1
 			if (!t.order)
 				t.order=0
+			t.translation=""+t.translation
 		})
 		function order(A,B){
 			return A.order-B.order
 		}
 
-		return translations.sort(order)
+		translations= translations.sort(order)
+		return translations
 	}
 
-	async getAll(phrase_phrase,options){
+	async establish(phrase_phrase,options){
+		if (options.filepath)
+			options.context=subPath(options.filepath,this.options.directory)
+
 		const name = options.context ? this.namespace(options.context) : 'default'
 		const namespace=await this.registerNamespace(name)
 		const phrase=await this.registerPhrase(phrase_phrase,namespace.locale,options)
-		await this.registerInstance(namespace.id,phrase.id)
-		const translations=  await this.getTranslations(phrase.id,namespace.id)
-		return [phrase.id,namespace.id,translations]
+		await this.registerInstance(phrase.id,namespace.id)
+		return [phrase.id,namespace.id]
 	}
-
+	
 	async Get(phrase,options){
-		var [PhraseId,NamespaceId,translations]= await this.getAll(phrase,options)
+		const [PhraseId,NamespaceId]= await this.establish(phrase,options)
+		const translations=await this.getTranslations(PhraseId,NamespaceId)
 		if (!translations || !translations.length){
-			console.log("NO RESULTS")
-			translations=[ { 
+			return { 
 				PhraseId:PhraseId,
 				NamespaceId,NamespaceId,
 				translation:phrase
-			}]
+			}
 		}
-		var translation=translations[0]
-		translation.translation=""+translation.translation
-		return translation
+		return translations[0]
 	}
 
-	async putTranslation(NamespaceId,PhraseId,translation){
-		const [Translation]= await this.sequelize.models.Translation.findOrCreate({
+	async putTranslation(PhraseId,NamespaceId,translation){
+		const [DefaultTranslation,default_created]= await this.sequelize.models.Translation.findOrCreate({
+			where:{
+				NamespaceId:this.DefaultNamespaceId,
+				PhraseId:PhraseId,
+				locale:this.options.locale
+			},
+			defaults:{
+				NamespaceId:this.DefaultNamespaceId,
+				PhraseId:PhraseId,
+				locale:this.options.locale,
+				translation:translation,
+			}
+		})
+
+		if (DefaultTranslation.translation == translation)
+			return DefaultTranslation
+
+		const [Translation,created]= await this.sequelize.models.Translation.findOrCreate({
 			where:{
 				NamespaceId:NamespaceId,
 				PhraseId:PhraseId,
@@ -165,13 +185,25 @@ module.exports=class Marmot{
 				translation:translation,
 			}
 		})
+
+		if (Translation.translation != translation)
+			console.error("WARNING, SUBSEQUENT TRANSLATIONS CURRENTLY DISCARDED")
+
 		return Translation
 	}
 
 	async Put(phrase,translation,options){
-		const existing=await this.Get(phrase,options)
-		console.log("TRANSLATIONS="+JSON.stringify(existing))
+		if (typeof options == 'string')
+			options={context:options}
 
-		return this.putTranslation(existing.NamespaceId,existing.PhraseId,translation)
+		const [PhraseId,NamespaceId]= await this.establish(phrase,options)
+		const Translation=await this.putTranslation(PhraseId,NamespaceId,translation)
+		return Translation 
 	}
+}
+
+function subPath(path,root){
+	if (path.substr(0,root.length) != root)
+		return path
+	return path.substr(root.length)
 }
