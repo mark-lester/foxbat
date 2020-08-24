@@ -10,7 +10,7 @@ var patterns = [
 module.exports=function tagParse(input){
 	var tokens=tokenize(input,patterns).filter(relevant)
 	var output={}
-	var control_variable,execution_phase
+	var control,execution_phase
 	expressions=toksplit(tokens,'comma')
 	expressions.map((expression)=>{
 		var [key,val]=toksplit(expression,'equal')
@@ -25,20 +25,20 @@ module.exports=function tagParse(input){
 		// find var
 		output[expandKey(key)]=val
 		const [c,e]=controlVariable(val)
-		if (control_variable == undefined)
-			control_variable=c
+		if (control== undefined)
+			control=c
 		if (execution_phase == undefined)
 			execution_phase=e
 	})
 
-	if (output.on){
-		control_variable=output.on
-		delete output.on
+	if (output.control){
+		control=output.control
+		delete output.control
 	}
 	if (execution_phase==undefined)
 		execution_phase='once'
 
-	return [output,control_variable,execution_phase]
+	return [output,control,execution_phase]
 }
 
 function expandRanks(output){
@@ -83,8 +83,8 @@ function expandKey(key){
 			return 'plural'
 		case 'e':
 			return 'empty'
-		case 'o':
-			return 'on'
+		case 'c':
+			return 'control'
 	}
 	return key
 }

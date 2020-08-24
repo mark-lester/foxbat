@@ -2,7 +2,7 @@ module.exports = function(sequelize, DataTypes) {
   return  {
 	  attributes:{
 		locale: { type: DataTypes.STRING(8), allowNull: false},
-		translation: { type: DataTypes.BLOB, allowNull: false },
+		translation: { type: DataTypes.STRING(1024), allowNull: false },
 	},
 	relations:[{
 		relatedModel:'Phrase',

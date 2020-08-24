@@ -25,6 +25,10 @@ return class Foxbat extends Liquid {
 			outputDelimiterLeft:options.onceOutputDelimiterLeft ||  '{?',
 			outputDelimiterRight:options.onceOutputDelimiterRight ||  '?}',
 		}))
+
+		// TODO untangle this. 
+		if (this.marmot)
+			this.preliquid.marmot=this.marmot
 	}
 
     	async renderFile(file, ctx, opts){

@@ -19,11 +19,11 @@ const transform={
 	parse: function (token,context) {
 		var results=translateTagParse(token.args,context)
 		this.phrases=results[0]
-		this.control_variable=results[1]
+		this.control=results[1]
 		this.execution_phase=results[2]
 	},
 	render: async function (context, emitter) {
-		var rank=determine_rank(context,this.control_variable)
+		var rank=determine_rank(context,this.control)
 		translation = this.phrases[rank]
 		const output = await this.liquid.parseAndRender(translation, context.environments)
 		return emitter.write(output)
@@ -34,7 +34,7 @@ const translate={
 	parse: function (token,context) {
 		var results=translateTagParse(token.args,context)
 		this.phrases=results[0]
-		this.control_variable=results[1]
+		this.control=results[1]
 		this.execution_phase=results[2]
 	},
 	render: async function (context, emitter) {
@@ -42,11 +42,13 @@ const translate={
 		var nrank
 		var job=Promise.resolve()
 		var me=this
+		var PhraseId
 		Object.keys(this.phrases).forEach((rank)=>{
 			job=job.then(()=>{
 				return me.liquid.marmot.Get(this.phrases[rank],{
 					filepath:context.environments._.FILEPATH,
-					rank:rank
+					rank:rank,
+					control:me.control
 				}) 
 				.then((r)=>{
 					translations[rank] = r
@@ -76,7 +78,7 @@ const translate={
 				break
 			case 'every':
 			case 'client':
-				emitter.write(transformCode(translations,this.control_variable,this.execution_phase))
+				emitter.write(transformCode(translations,this.control,this.execution_phase))
 				break
 		}
 
@@ -89,12 +91,12 @@ function isHtml(context){
 	return context.environments._.IS_HTML ||  context.environments._.FILEPATH.match(/html$/)
 }
 
-function transformCode(translations,control_variable,execution_phase){
+function transformCode(translations,control,execution_phase){
 	var args=Object.keys(translations).map(function (rank){
 		return rank+'="'+translations[rank].translation+'"'
 	})
 
-	args.push('on='+control_variable)
+	args.push('control='+control)
 	args=args.join(', ')
 	// are we going {? for server time, or traditional {{ client side
 	exec_phase_open_char= execution_phase == 'every' ? '@' : '%' 
@@ -107,9 +109,9 @@ function transformCode(translations,control_variable,execution_phase){
 
 
 
-function determine_rank(context,control_variable){
+function determine_rank(context,control){
 	// TODO, use liquid's internal resolution code
-	switch (context.environments[control_variable]){
+	switch (context.environments[control]){
 		case undefined:
 		case 0:
 			return 'empty'

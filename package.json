@@ -1,7 +1,7 @@
 {
   "name": "foxbat",
-  "version": "0.0.1",
-  "description": "Multi phase executable Handlebars with integrated i18n",
+  "version": "0.0.2",
+  "description": "Multi phase executable Liquid with integrated i18n multi rank translations and marmot intl dictionary",
   "main": "index.js",
   "scripts": {
     "test": "mocha"
@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "async-helpers": "^0.3.17",
+    "gettext-parser": "git+https://github.com/mark-lester/gettext-parser.git",
     "handlebars": "^4.7.6",
     "liquidjs": "^9.15.0",
     "lru-cache": "^6.0.0",
@@ -26,7 +27,9 @@
     "url": "git+https://github.com/mark-lester/foxbat.git"
   },
   "keywords": [
-    "handlebars",
+    "liquid",
+    "liquidjs",
+    "foxbat",
     "pangolin"
   ],
   "bugs": {
