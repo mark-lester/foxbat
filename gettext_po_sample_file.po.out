@@ -1,0 +1,69 @@
+msgid ""
+msgstr "Content-Type: text/plain\n"
+
+msgid "Enter your credentials below to login"
+msgstr "Entrez vos identifiants ci-dessous pour vous connecter"
+
+msgid "Make sure you've entered the correct username and password"
+msgstr ""
+"Assurez-vous que vous avez entré le nom d'utilisateur correct et le mot de "
+"passe"
+
+msgid ""
+"Enter your address in the field below. A new password will be sent to your "
+"inbox."
+msgstr ""
+"Entrez votre adresse dans le champ ci-dessous. Un nouveau mot de passe sera "
+"envoyé à votre boîte de réception."
+
+msgid "TODO List"
+msgstr "TODO List"
+
+msgid ""
+"Login successful !\n"
+"Welcome back %s !"
+msgstr ""
+"Connexion réussie !\n"
+"Bon retour %s !"
+
+msgid ""
+"We were unable to sign you up.\n"
+"Please correct the marked fields."
+msgstr ""
+"Nous n'avons pas pu vous inscrire.\n"
+"Veuillez corriger les champs marqués."
+
+msgid "Sign up for free! No credit card required!"
+msgstr "Inscrivez-vous gratuitement ! Aucune carte de crédit !"
+
+msgid "I forgot my password"
+msgstr "J'ai oublié mon mot de passe"
+
+msgid ""
+"Thank you for signing up !\n"
+"Please check your email address to activate your account."
+msgstr ""
+"Je vous remercie pour vous inscrire !\n"
+"Veuillez vérifier votre adresse e-mail pour activer votre compte."
+
+msgid "Terms and conditions"
+msgstr "Termes et conditions"
+
+msgid "Password"
+msgstr "Mot de passe"
+
+msgid "Just one user online"
+msgstr "Un seul utilisateur en ligne"
+
+msgid "phrase one"
+msgstr "translated phrase one"
+
+msgid "phrase two"
+msgstr "translated phrase two default"
+
+msgid "we have one banana"
+msgstr "translation of we have one banana"
+
+msgctxt "no.domain.set//test/test.html"
+msgid "phrase two"
+msgstr "translated phrase two specific"
