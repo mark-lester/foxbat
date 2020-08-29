@@ -4,7 +4,7 @@ const Sequelize=modelReader(require('sequelize'))
 const gettextParser= require("gettext-parser");
 
 const defaultOptions={
-	directory:process.cwd(), // root directory for templates
+	directory:__dirname, // root directory for models
 	domain:"no.domain.set", // the domain name of your project
 	source_locale:'en', // the locale of the input data, what language the stuff was marked up in
 	locale:'en', // the default locale you want to translate to
