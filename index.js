@@ -3,7 +3,10 @@ const path = require('path')
 const FS = require('fs').promises
 const Translate=require('./translate')
 const FOXBAT_DIRECTORY='.foxbat'
+const assert=require('assert')
 
+const defaultLocale='en'
+const defaultContext={'$':{}}
 module.exports=function(Liquid){
 
 if (!Liquid)
@@ -26,26 +29,33 @@ return class Foxbat extends Liquid {
 			outputDelimiterRight:options.onceOutputDelimiterRight ||  '?}',
 		}))
 
-		// TODO untangle this. 
+		// TODO untangle this. We need to be able to chain instantiation. 
+		// Make a liquid, then make another with child (liquid) and inherity the marmot
+		// you (generally) only ever want to translate something into one language shirley,
+		// so we only need one instance of marmot which we can inherit
 		if (this.marmot)
 			this.preliquid.marmot=this.marmot
 	}
 
     	async renderFile(file, ctx, opts){
-        	const options = Object.assign({}, this.options,opts)
+		if (opts['$'])
+			assert(typeof opts['$'] == 'object')
+
+        	const options = Object.assign(this.options,opts)
         	const paths = options.root.map(root => this.fs.resolve(root, file, options.extname));
+		const locale=this.marmot.get_locale()
 
         	for (const filepath of paths) {
-			var sub_ctx=Object.assign({},ctx)
+			var sub_ctx=Object.assign(defaultContext,ctx)
             		if (!this.fs.existsSync(filepath))
                 		continue;
-			const inter=interFile(filepath,sub_ctx._.LOCALE)
-			if (!sub_ctx._)
-				sub_ctx._={}
-			sub_ctx._.FILEPATH=filepath
+			const inter=interFile(filepath,locale)
+			const directory=interDir(filepath,locale)
+			sub_ctx['$'].FILEPATH=filepath
 			var content
 			if (isNewer(filepath,inter)){
 				content = await this.preliquid.renderFile(filepath,sub_ctx,opts)
+				await FS.mkdir(directory,{recursive:true})
 				await FS.writeFile(inter,content)
 			}
 			else {
@@ -66,7 +76,8 @@ function isNewer(source,target){
 	.then((s)=>{
 		sstat=s
 		return FS.stat(target)
-	}).then((f)=>{
+	})
+	.then((f)=>{
 		fstat=f
 		if (!fstat || !fstat.mtime)
 			return true
@@ -78,5 +89,8 @@ function isNewer(source,target){
 }
 
 function interFile(file,locale){
-	return [path.dirname(file),FOXBAT_DIRECTORY,locale,path.basename(file)].join('/')
+	return [interDir(file,locale),path.basename(file)].join('/')
+}
+function interDir(file,locale){
+	return [path.dirname(file),FOXBAT_DIRECTORY,locale].join('/')
 }

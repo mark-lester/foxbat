@@ -46,7 +46,7 @@ const translate={
 		Object.keys(this.phrases).forEach((rank)=>{
 			job=job.then(()=>{
 				return me.liquid.marmot.Get(this.phrases[rank],{
-					filepath:context.environments._.FILEPATH,
+					filepath:context.environments['$'].FILEPATH,
 					rank:rank,
 					control:me.control
 				}) 
@@ -61,7 +61,7 @@ const translate={
 		this.PhraseId=translations[nrank].PhraseId
 		this.NamespaceId=translations[nrank].NamespaceId
 
-		var emit_divs=isHtml(context) && !context.environments._.NO_DEBUG
+		var emit_divs=isHtml(context) && !context.environments['$'].NO_DEBUG
 		if (emit_divs)
 			emitter.write("<div class=i18n id="+this.PhraseId+" ns="+this.NamespaceId+">")
 
@@ -88,7 +88,7 @@ const translate={
 }
 
 function isHtml(context){
-	return context.environments._.IS_HTML ||  context.environments._.FILEPATH.match(/html$/)
+	return context.environments['$'].IS_HTML ||  context.environments['$'].FILEPATH.match(/html$/)
 }
 
 function transformCode(translations,control,execution_phase){
@@ -103,7 +103,6 @@ function transformCode(translations,control,execution_phase){
 	exec_phase_close_char= execution_phase == 'every' ? '@' : '%'
 
 	const output= '{'+exec_phase_open_char+'transform '+args+' '+exec_phase_close_char+'}'
-	console.log("OUTPUT="+output)
 	return output
 }
 

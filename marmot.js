@@ -55,6 +55,10 @@ module.exports=class Marmot{
 		return this.DefaultNamespaceId
 	}
 
+	get_locale(){
+		return this.options.locale
+	}
+
 	defaultSequelize(){
 		this.sequelize = new Sequelize(this.options.user,this.options.password,this.options.database, {
 			host: this.options.host,
