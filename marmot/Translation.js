@@ -15,6 +15,7 @@ module.exports = function(sequelize, DataTypes) {
 		name:'key',
 		unique:true,
 		fields:'PhraseId NameSpaceId locale'.split(' ')
-	}]
+	}],
+	include:['Namespace']
   }
 }

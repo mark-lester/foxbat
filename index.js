@@ -38,7 +38,7 @@ return class Foxbat extends Liquid {
 	}
 
     	async renderFile(file, ctx, opts){
-		if (opts['$'])
+		if (opts && opts['$'])
 			assert(typeof opts['$'] == 'object')
 
         	const options = Object.assign(this.options,opts)
